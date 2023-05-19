@@ -8,15 +8,15 @@ from pydantic import BaseModel
 from typing import List
 
 class NarrativeService(BaseModel):
-    instance: str
-    state: str
-    session_id: str
-    last_seen: str
-    session_key: str
-    image: str
-    publicEndpoints: str
-    last_ip: str
-    created: str
+    instance: str = None
+    state: str = None
+    session_id: str = None
+    last_seen: str = None
+    session_key: str = None
+    image: str = None
+    publicEndpoints: str = None
+    last_ip: str = None
+    created: str = None
 
 class ActiveNarrativeContainers(BaseModel):
     timestamp: str
