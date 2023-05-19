@@ -7,7 +7,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 
-COPY src/ /app
+COPY src/ /app/
 #COPY lib/ /app/lib
 #ARG VCS_REF=NoVCS_RefProvided
 #ENV VCS_REF=$VCS_REF

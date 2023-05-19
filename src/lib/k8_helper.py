@@ -4,7 +4,7 @@ from datetime import datetime
 from kubernetes import client, config
 
 # Set up Kubernetes client
-from src.models import ActiveNarrativeContainers, NarrativeService
+from lib.models import ActiveNarrativeContainers, NarrativeService
 
 config.load_kube_config()
 k8s_client = client.CoreV1Api()
