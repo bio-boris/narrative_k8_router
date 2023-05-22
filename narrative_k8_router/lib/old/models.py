@@ -7,6 +7,7 @@ from fastapi.exception_handlers import (
 from pydantic import BaseModel
 from typing import List
 
+
 class NarrativeService(BaseModel):
     instance: str = None
     state: str = None
@@ -18,13 +19,12 @@ class NarrativeService(BaseModel):
     last_ip: str = None
     created: str = None
 
+
 class ActiveNarrativeContainers(BaseModel):
     timestamp: str
     version: str
     git_hash: str
     narrative_services: List[NarrativeService]
-
-
 
 
 class ContainerRequest(BaseModel):
