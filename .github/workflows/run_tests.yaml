@@ -16,7 +16,7 @@ on:
 
 jobs:
 
-  collections_tests:
+  narrative_k8_router_tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
