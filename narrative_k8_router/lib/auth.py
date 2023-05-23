@@ -20,7 +20,9 @@ async def authenticator_middleware(request: Request, call_next):
     try:
         if request.url.path not in unauthenticated_endpoints:
             valid_user(
-                request, auth_url=settings.auth_url, admin_role=settings.admin_role
+                request,
+                auth_url=settings.auth_url,
+                admin_role=settings.admin_role,
             )
         response = await call_next(request)
         return response
@@ -29,12 +31,7 @@ async def authenticator_middleware(request: Request, call_next):
     except Exception as e:
         error_message = traceback.format_exc()
 
-        return JSONResponse(
-            {"detail": str(e), "exception": error_message}, status_code=500
-        )
-
-
-
+        return JSONResponse({"detail": str(e), "exception": error_message}, status_code=500)
 
 
 def valid_user(request: Request, auth_url: str, admin_role: str):
@@ -57,9 +54,7 @@ def valid_user(request: Request, auth_url: str, admin_role: str):
     response = requests.get(auth_url, headers={"Authorization": token})
 
     if response.status_code == 401:
-        raise HTTPException(
-            status_code=401, detail=f"Invalid auth token or token has expired."
-        )
+        raise HTTPException(status_code=401, detail=f"Invalid auth token or token has expired.")
     if response.status_code != 200:
         raise HTTPException(
             status_code=401,

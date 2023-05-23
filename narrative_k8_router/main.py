@@ -9,6 +9,7 @@ app.include_router(narrative_router)
 app.include_router(status_router)
 app.middleware("http")(authenticator_middleware)
 
+
 def create_app(auth=True) -> FastAPI:
     app = FastAPI()
     app.include_router(narrative_router)
@@ -17,4 +18,3 @@ def create_app(auth=True) -> FastAPI:
         app.middleware("http")(authenticator_middleware)
 
     return app
-

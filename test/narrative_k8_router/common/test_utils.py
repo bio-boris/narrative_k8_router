@@ -26,6 +26,14 @@ def client():
         yield test_client
 
 
+@pytest.fixture(scope="module")
+def anonymous_client():
+    # Define the default cookies
+    app = create_app(auth=True)
+    with TestClient(app) as test_client:
+        yield test_client
+
+
 async def admin_user_auth_middleware(request: Request, call_next):
     request.state.username = "test_user"
     request.state.custom_roles = ["I AM AN ADMIN"]

@@ -28,13 +28,12 @@ def client():
         yield test_client
 
 
-def requests_mock_helper(rq,admin=False):
+def requests_mock_helper(rq, admin=False):
     auth_url = os.environ.get("AUTH_URL", "https://ci.kbase.us/services/auth/api/V2/me")
-    user = {'user': 'test_user', 'custom_roles': []}
+    user = {"user": "test_user", "custom_roles": []}
     if admin:
-        user['custom_roles'] = ['KBASE_ADMIN']
+        user["custom_roles"] = ["KBASE_ADMIN"]
     rq.get(auth_url, json=user)  # Update the json parameter
-
 
 
 def test_whoami(requests_mock, client):
@@ -42,13 +41,15 @@ def test_whoami(requests_mock, client):
 
     response = client.get("/whoami/")
     assert response.status_code == 200
-    assert response.json() == {'is_KBASE_ADMIN': False, 'username': 'test_user'}
+    assert response.json() == {
+        "is_KBASE_ADMIN": False,
+        "username": "test_user",
+    }
 
-    requests_mock_helper(requests_mock,admin=True)
+    requests_mock_helper(requests_mock, admin=True)
     response = client.get("/whoami/")
     assert response.status_code == 200
-    assert response.json() == {'is_KBASE_ADMIN': True, 'username': 'test_user'}
-
+    assert response.json() == {"is_KBASE_ADMIN": True, "username": "test_user"}
 
 
 def test_status(client):
@@ -70,7 +71,7 @@ def test_start_container(client):
         "container_name": "test-container",
         "container_image": "test-image",
         "container_command": "echo",
-        "container_args": "Hello, World!"
+        "container_args": "Hello, World!",
     }
     response = client.post("/start_container", json=container_req)
     assert response.status_code == 200

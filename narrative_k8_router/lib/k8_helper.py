@@ -1,26 +1,32 @@
 import os
 from datetime import datetime
+from functools import lru_cache
 
 from kubernetes import client, config
 
+from lib.config import get_settings
 from lib.models import ActiveNarrativeContainers, NarrativeService
+
 
 # Set up Kubernetes client
 
-config.load_kube_config()
-k8s_client = client.CoreV1Api()
+
+@lru_cache()
+def get_k8s_client() -> client.CoreV1Api:
+    config.load_kube_config()
+    return client.CoreV1Api()
 
 
 def get_active_narrative_containers() -> ActiveNarrativeContainers:
     # TODO See what fields are being scraped from this endpoint, and if there is some custom logic
     # otherwise this seems to match up api response almost
+    k8s_client = get_k8s_client()
+    settings = get_settings()
 
     label_selector = "app=narrative"
-    namespace = os.environ.get("KUBERNETES_NAMESPACE", "staging-narrative")
+    namespace = settings.namespace
 
-    pod_list = k8s_client.list_namespaced_pod(timeout_seconds=1,
-        label_selector=label_selector, namespace=namespace
-    )
+    pod_list = k8s_client.list_namespaced_pod(timeout_seconds=1, label_selector=label_selector, namespace=namespace)
 
     narrative_services = []
     for pod in pod_list.items:
@@ -42,10 +48,11 @@ def get_active_narrative_containers() -> ActiveNarrativeContainers:
 
         narrative_services.append(narrative_service)
 
+    settings = get_settings()
     active_narrative_containers = ActiveNarrativeContainers(
         timestamp=datetime.now().isoformat(),
-        version="0.10.1",
-        git_hash="119fc07",
+        version=settings.version,
+        git_hash=settings.gitcommit,
         narrative_services=narrative_services,
     )
 

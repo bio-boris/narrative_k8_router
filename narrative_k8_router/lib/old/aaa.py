@@ -51,7 +51,8 @@ def status():
 
 @app.get("/narrative_status")
 def narrative_status(
-    request: Request, settings: Annotated[config.Settings, Depends(get_settings)]
+    request: Request,
+    settings: Annotated[config.Settings, Depends(get_settings)],
 ):
     """
     Simple status endpoint to re-assure us that the service is alive. Unauthenticated access just returns
@@ -74,9 +75,7 @@ async def hello(narrative: str) -> Response:
     auth_status = valid_request(request)
 
     if "userid" in auth_status:
-        resp = get_container(
-            auth_status["userid"], request, narrative
-        )  # replace with appropriate function
+        resp = get_container(auth_status["userid"], request, narrative)  # replace with appropriate function
     else:
         if auth_status["error"] == "no_cookie":
             next_request = '{{"path":"{}","external":true}}'.format(request.url.path)
@@ -92,7 +91,8 @@ async def hello(narrative: str) -> Response:
             )
         else:
             raise HTTPException(
-                status_code=401, detail="Valid KBase authentication token required"
+                status_code=401,
+                detail="Valid KBase authentication token required",
             )
 
     return resp
@@ -305,9 +305,7 @@ async def hello(narrative: str) -> Response:
     auth_status = valid_request(request)
 
     if "userid" in auth_status:
-        resp = get_container(
-            auth_status["userid"], request, narrative
-        )  # replace with appropriate function
+        resp = get_container(auth_status["userid"], request, narrative)  # replace with appropriate function
     else:
         if auth_status["error"] == "no_cookie":
             next_request = '{{"path":"{}","external":true}}'.format(request.url.path)
@@ -323,7 +321,8 @@ async def hello(narrative: str) -> Response:
             )
         else:
             raise HTTPException(
-                status_code=401, detail="Valid KBase authentication token required"
+                status_code=401,
+                detail="Valid KBase authentication token required",
             )
 
     return resp
