@@ -40,7 +40,7 @@ jobs:
 
     - name: Run tests
       shell: bash
-      run: cd /home/runner/work/narrative_k8_router/narrative_k8_router && run_tests.sh
+      run: cd /home/runner/work/narrative_k8_router && run_tests.sh
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
