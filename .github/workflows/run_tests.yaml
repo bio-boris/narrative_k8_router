@@ -1,0 +1,50 @@
+name: narrative_k8_router tests
+
+on:
+  pull_request:
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
+  push:
+    # run workflow when merging to main or develop
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+
+  narrative_k8_router_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+
+    - name: Repo checkout
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      shell: bash
+      run: |
+        TESTS="test/narrative_k8_router/routes/*.py test/narrative_k8_router/*.py"
+        PYTHONPATH=.:narrative_k8_router:test/narrative_k8_router pytest --cov=narrative_k8_router --cov-report=xml $TESTS
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: true

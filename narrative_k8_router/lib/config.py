@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     admin_role: str = os.environ.get("ADMIN_ROLE", "KBASE_ADMIN")
     namespace: str = os.environ.get("KUBERNETES_NAMESPACE", "staging-narrative")
     kubeconfig: str = os.environ.get("KUBECONFIG", "~/.kube/config")
+    version: str = os.environ.get("VERSION", "123")
+    gitcommit: str = os.environ.get("gitcommit", "123")
 
     # Could load from .env file instead
     # class Config:
