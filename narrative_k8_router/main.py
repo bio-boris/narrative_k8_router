@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from auth import authenticator_middleware
-from routes.narrative import router as narrative_router
-from routes.status import router as status_router
+from lib.auth import authenticator_middleware
+from narrative_k8_router.routes.narrative import router as narrative_router
+from narrative_k8_router.routes.status import router as status_router
 
 app = FastAPI()
 app.include_router(narrative_router)

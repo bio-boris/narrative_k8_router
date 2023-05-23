@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends
 from fastapi import Request
 from typing_extensions import Annotated
 
-from old.k8_helper import get_active_narrative_containers
+from k8_helper import get_active_narrative_containers
 import config
 from config import get_settings
 
@@ -13,9 +13,7 @@ app = FastAPI()
 
 
 @app.get("/narrative_status")
-def narrative_status(
-    request: Request, settings: Annotated[config.Settings, Depends(get_settings)]
-):
+def narrative_status():
     """
     Simple status endpoint to re-assure us that the service is alive. Unauthenticated access just returns
     a 200 code with the current time in JSON string. If a kbase auth cookie is found, and the username is in the

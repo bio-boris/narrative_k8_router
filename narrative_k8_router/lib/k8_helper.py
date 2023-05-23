@@ -1,16 +1,11 @@
 import os
 from datetime import datetime
-from typing import Dict
 
-from fastapi import HTTPException
 from kubernetes import client, config
 
-# Set up Kubernetes client
-from kubernetes.client import models, ApiException
+from lib.models import ActiveNarrativeContainers, NarrativeService
 
-from old.models import ActiveNarrativeContainers, NarrativeService
-from old.main import app
-from models import ContainerRequest
+# Set up Kubernetes client
 
 config.load_kube_config()
 k8s_client = client.CoreV1Api()
@@ -23,7 +18,7 @@ def get_active_narrative_containers() -> ActiveNarrativeContainers:
     label_selector = "app=narrative"
     namespace = os.environ.get("KUBERNETES_NAMESPACE", "staging-narrative")
 
-    pod_list = k8s_client.list_namespaced_pod(
+    pod_list = k8s_client.list_namespaced_pod(timeout_seconds=1,
         label_selector=label_selector, namespace=namespace
     )
 
@@ -98,51 +93,51 @@ sample_response_on_ci = {
 #         logger.debug({"message": "{} roles does not contain {}".format(auth_status['userid'], cfg['status_role']),
 #                       "customroles": str(auth_status['customroles'])})
 # return (flask.Response(json.dumps(resp_doc), 200, mimetype='application/json'))
-@app.post(
-    "/start_container", response_model=Dict[str, str], summary="Start a container"
-)
-async def start_container(container_req: ContainerRequest):
-    """
-    Start a container in the Kubernetes cluster.
-
-    Args:
-        container_req: ContainerRequest model containing container details.
-
-    Returns:
-        A dictionary with a success message.
-
-    Raises:
-        HTTPException: If there is an error starting the container.
-    """
-    # Get namespace from environmental variable
-    namespace = os.environ.get("KUBERNETES_NAMESPACE", "staging-narrative")
-
-    # Create container definition
-    container = models.V1Container(
-        name=container_req.container_name,
-        image=container_req.container_image,
-        command=container_req.container_command.split(),
-        args=container_req.container_args.split(),
-    )
-
-    # Create pod definition
-    pod = models.V1Pod(
-        metadata=models.V1ObjectMeta(name=container_req.container_name),
-        spec=models.V1PodSpec(containers=[container]),
-    )
-
-    try:
-        # Create pod in namespace on Kubernetes cluster
-        k8s_client.create_namespaced_pod(body=pod, namespace=namespace)
-        return {
-            "message": f"Container {container_req.container_name} started in namespace {namespace}"
-        }
-    except ApiException as e:
-        if e.status == 409:
-            raise HTTPException(
-                status_code=409, detail="Conflict: Container already exists"
-            )
-        else:
-            raise HTTPException(status_code=e.status, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post(
+#     "/start_container", response_model=Dict[str, str], summary="Start a container"
+# )
+# async def start_container(container_req: ContainerRequest):
+#     """
+#     Start a container in the Kubernetes cluster.
+#
+#     Args:
+#         container_req: ContainerRequest model containing container details.
+#
+#     Returns:
+#         A dictionary with a success message.
+#
+#     Raises:
+#         HTTPException: If there is an error starting the container.
+#     """
+#     # Get namespace from environmental variable
+#     namespace = os.environ.get("KUBERNETES_NAMESPACE", "staging-narrative")
+#
+#     # Create container definition
+#     container = models.V1Container(
+#         name=container_req.container_name,
+#         image=container_req.container_image,
+#         command=container_req.container_command.split(),
+#         args=container_req.container_args.split(),
+#     )
+#
+#     # Create pod definition
+#     pod = models.V1Pod(
+#         metadata=models.V1ObjectMeta(name=container_req.container_name),
+#         spec=models.V1PodSpec(containers=[container]),
+#     )
+#
+#     try:
+#         # Create pod in namespace on Kubernetes cluster
+#         k8s_client.create_namespaced_pod(body=pod, namespace=namespace)
+#         return {
+#             "message": f"Container {container_req.container_name} started in namespace {namespace}"
+#         }
+#     except ApiException as e:
+#         if e.status == 409:
+#             raise HTTPException(
+#                 status_code=409, detail="Conflict: Container already exists"
+#             )
+#         else:
+#             raise HTTPException(status_code=e.status, detail=str(e))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))

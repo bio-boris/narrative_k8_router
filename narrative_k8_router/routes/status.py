@@ -5,8 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
-from narrative_k8_router.lib.auth import authenticator_middleware
-from narrative_k8_router.lib.config import get_settings
+from lib.auth import authenticator_middleware
+from lib.config import get_settings
 
 router = APIRouter()
 

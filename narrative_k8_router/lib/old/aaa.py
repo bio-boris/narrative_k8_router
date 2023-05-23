@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from typing_extensions import Annotated
 
 from auth import authenticator_middleware
-from old.k8_helper import get_active_narrative_containers
+from k8_helper import get_active_narrative_containers
 import config
 from auth import whoami_helper
 from config import get_settings

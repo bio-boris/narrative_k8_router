@@ -4,7 +4,7 @@ import requests
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from config import get_settings
+from lib.config import get_settings
 
 KBASE_SESSION_COOKIE = "kbase_session"
 
