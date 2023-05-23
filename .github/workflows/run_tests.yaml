@@ -41,9 +41,9 @@ jobs:
     - name: Run tests
       shell: bash
       run: |
-      tests="test/narrative_k8_router/routes/*.py"
-      PYTHONPATH=.:narrative_k8_router:test/narrative_k8_router pytest --cov=src --cov-report=xml $tests
-      
+        tests="test/narrative_k8_router/routes/*.py"
+        PYTHONPATH=.:narrative_k8_router:test/narrative_k8_router pytest --cov=src --cov-report=xml $tests
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
