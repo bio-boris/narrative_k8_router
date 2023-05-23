@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -n "$GITHUB_ACTIONS" ]]; then
-  pip install --upgrade pip
+  echo "Running in GHA"
 fi
 
     
