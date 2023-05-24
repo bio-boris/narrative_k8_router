@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from common.test_utils import client, admin_client, anonymous_client
 from lib.config import get_settings
 

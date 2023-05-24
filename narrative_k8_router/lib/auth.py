@@ -1,18 +1,46 @@
+import hashlib
+import logging
+import re
 import traceback
+from urllib.parse import quote_plus
 
 import requests
 from fastapi import HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from lib.config import get_settings
+import logging
 
 KBASE_SESSION_COOKIE = "kbase_session"
-
 
 # One day fastapi will support route based middleware
 # See https://github.com/tiangolo/fastapi/issues/1174
 # See https://github.com/tiangolo/fastapi/discussions/7691
 unauthenticated_endpoints = ["/status", "/docs", "/openapi.json", "/redoc"]
+
+
+def clean_userid(userid: str, settings=get_settings()) -> str:
+    """
+    Takes a normal KBase userid and converts it into a userid that is okay to embed in a rancher servicename
+    """
+    hash = hashlib.sha1(userid.encode()).hexdigest()
+    hash = hash[:6]
+    clean1 = re.sub("[\._-]+", "-", userid)  # noqa: W605
+    cleaned = re.sub("-$", "-0", clean1)
+    max_len = 62 - len(settings.container_name) - len(hash)
+    cleaned = "{}-{}".format(cleaned[:max_len], hash)
+    return cleaned
+
+
+def redirect(request, settings=get_settings()):
+    """
+    If no cookie is set, force the user to login!
+    """
+    settings = get_settings()
+    next_request = '{{"path":"{}","external":true}}'.format(request.url.path)
+    logging.info({"message": "Redirecting user for no_cookie", "nextrequest": request.url})
+    redirect_url = f"{settings.login_url_prefix}/#login?nextrequest={next_request}"
+    return RedirectResponse(url=redirect_url)
 
 
 async def authenticator_middleware(request: Request, call_next):
@@ -27,7 +55,10 @@ async def authenticator_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     except HTTPException as e:
-        return JSONResponse({"detail": e.detail}, status_code=e.status_code)
+        if request.url.path == "/whoami/":
+            return JSONResponse({"detail": e.detail}, status_code=e.status_code)
+        else:
+            return redirect(request)
     except Exception as e:
         error_message = traceback.format_exc()
 
@@ -65,10 +96,12 @@ def valid_user(request: Request, auth_url: str, admin_role: str):
     username = data.get("user")
     custom_roles = data.get("customroles", [])
     is_admin = admin_role in custom_roles
+    cleaned_username = clean_userid(username)
 
     # Save user attributes in request.state for later use
     request.state.username = username
     request.state.custom_roles = custom_roles
     request.state.is_admin = is_admin
+    request.state.cleaned_username = cleaned_username
 
     return request

@@ -2,10 +2,12 @@ import os
 from datetime import datetime
 from functools import lru_cache
 
+from fastapi import HTTPException
 from kubernetes import client, config
+from kubernetes.client import models, V1SecurityContext, V1Capabilities, ApiException
 
 from lib.config import get_settings
-from lib.models import ActiveNarrativeContainers, NarrativeService
+from lib.models import ActiveNarrativeContainers, NarrativeService, ContainerRequest
 
 
 # Set up Kubernetes client
@@ -17,11 +19,104 @@ def get_k8s_client() -> client.CoreV1Api:
     return client.CoreV1Api()
 
 
-def get_active_narrative_containers() -> ActiveNarrativeContainers:
+def get_container_security_context() -> V1SecurityContext:
+    return V1SecurityContext(
+        capabilities=V1Capabilities(
+            add=[],
+            drop=[
+                "MKNOD",
+                "NET_RAW",
+                "SYS_CHROOT",
+                "SETUID",
+                "SETGID",
+                "CHOWN",
+                "SYS_ADMIN",
+                "DAC_OVERRIDE",
+                "FOWNER",
+                "FSETID",
+                "SETPCAP",
+                "AUDIT_WRITE",
+                "SETFCAP",
+            ],
+        )
+    )
+
+
+def start_container(username:str, client_ip: str, session_id: str, prespawn=False, settings=get_settings(), k8s_client=get_k8s_client()) -> dict:
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required to start a container")
+
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Session ID is required to start a container")
+
+    namespace = settings.namespace
+
+    #TODO Might not need to differentiate between these names anymore, or if prespawned, do we need to create a UUID?
+    container_name = settings.container_name.format(username)
+    if prespawn:
+        container_name = settings.prespawn_container_name.format(username)
+
+
+
+    # Create container definition
+
+    container = models.V1Container(
+        name=container_name,
+        image="ghcr.io/kbase/narrative:latest",  # TODO: Make this configurable
+        security_context=get_container_security_context(),
+        image_pull_policy="Always",
+        ports=[models.V1ContainerPort(container_port=8888)],
+        tty=True,
+        stdin=True,
+    )
+
+    # Create pod definition
+    # Create pod definition
+    spec = models.V1PodSpec(
+        containers=[container],
+        restart_policy="Always",
+        dns_policy="ClusterFirst",
+    )
+    labels = {"app": "narrative", "session_id": session_id, "traefik.enable": "True"}
+    annotations = {"client-ip": client_ip, "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
+    metadata = models.V1ObjectMeta(name=container_name, namespace=namespace, labels=labels, annotations=annotations)
+    pod = models.V1Pod(metadata=metadata, spec=spec)
+
+    # # create a rule for list of hostnames that should match from cfg['hostname']
+    # host_rules = " || ".join(['Host("{}")'.format(hostname) for hostname in cfg["hostname"]])
+    # remaining_rule = ' && PathPrefix("{}") && HeadersRegexp("Cookie",`{}`)'
+    # labels["traefik.http.routers." + userid + ".rule"] = host_rules + remaining_rule.format("/narrative/", cookie)
+    # labels["traefik.http.routers." + userid + ".entrypoints"] = "web"
+    # container_config["launchConfig"]["labels"] = labels
+    # container_config["launchConfig"]["name"] = name
+    # if cfg["image_tag"] is not None and cfg["image_tag"] != "":
+    #     imageUuid = "{}:{}".format(cfg["image_name"], cfg["image_tag"])
+    # else:
+    #     # to do: fix calling latest_narr_version() so we don't need to call the `app` method like this
+    #     imageUuid = "{}:{}".format(cfg["image_name"], app.latest_narr_version())
+    # container_config["launchConfig"]["imageUuid"] = "docker:{}".format(imageUuid)
+    # container_config["launchConfig"]["environment"].update(cfg["narrenv"])
+    # container_config["name"] = name
+    # container_config["stackId"] = cfg["rancher_stack_id"]
+    #
+
+    try:
+        # Create pod in namespace on Kubernetes cluster
+        k8s_client.create_namespaced_pod(body=pod, namespace=namespace)
+        return {"message": f"Container {container_name} started in namespace {namespace}"}
+    except ApiException as e:
+        if e.status == 409:
+            raise HTTPException(status_code=409, detail="Conflict: Container already exists")
+        else:
+            raise HTTPException(status_code=e.status, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def get_active_narrative_containers(settings=get_settings()) -> ActiveNarrativeContainers:
     # TODO See what fields are being scraped from this endpoint, and if there is some custom logic
     # otherwise this seems to match up api response almost
     k8s_client = get_k8s_client()
-    settings = get_settings()
 
     label_selector = "app=narrative"
     namespace = settings.namespace
