@@ -34,6 +34,7 @@ def anonymous_client():
         yield test_client
 
 
+
 async def admin_user_auth_middleware(request: Request, call_next):
     request.state.username = "test_user"
     request.state.custom_roles = ["I AM AN ADMIN"]

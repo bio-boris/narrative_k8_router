@@ -31,3 +31,15 @@ def test_narrative_status(client, admin_client, mocker):
     # assert len(response.json()) == len(expected_response) + 1  # Adding 1 to account for the "timestamp" key
 
     assert {k: v for k, v in response.json().items() if k != "timestamp"} == expected_response
+
+
+def test_narrative_endpoint(client, admin_client, mocker):
+    mock_client = create_autospec(k8s_client.CoreV1Api)
+    mocker.patch(
+        # api_call is from slow.py but imported to main.py
+        "lib.k8_helper.get_k8s_client",
+        return_value=mock_client,
+    )
+
+    response = client.get("/narrative/147008")
+    assert response.json() == {}
