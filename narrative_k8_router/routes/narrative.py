@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response, Path
 
 from lib.k8_helper import get_active_narrative_containers
-from narrative_helper import get_container
+from lib.narrative_helper import get_container
 
 router = APIRouter()
 

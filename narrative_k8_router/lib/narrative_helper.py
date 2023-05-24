@@ -6,8 +6,8 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.requests import Request
 
 
-from config import get_settings
-from k8_helper import start_container
+from lib.config import get_settings
+from lib.k8_helper import start_container
 
 
 def error_response(auth_status: Dict[str, str], request: Request) -> Response:
