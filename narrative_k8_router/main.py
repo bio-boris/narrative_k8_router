@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 import logging
 from lib.auth import authenticator_middleware
-from narrative_k8_router.routes.narrative import router as narrative_router
-from narrative_k8_router.routes.status import router as status_router
+from routes.narrative import router as narrative_router
+from routes.status import router as status_router
 
 logging.basicConfig()
 
@@ -21,6 +21,8 @@ def create_app(auth=True) -> FastAPI:
 
     return app
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
